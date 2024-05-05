@@ -5,4 +5,4 @@ import cv2
 model = YOLO('yolov8n.pt')  # load a pretrained model (recommended for training)
 
 # Train the model
-results = model.train(data='dataset.yaml', epochs=100, imgsz=640, device=0)
+results = model.train(data='dataset.yaml', epochs=100, imgsz=640, workers=0)#, device=0)
