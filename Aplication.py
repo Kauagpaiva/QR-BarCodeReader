@@ -1,5 +1,7 @@
 from ultralytics import YOLO
 import cv2
+from pyzbar.pyzbar import decode #QR/Bar code reader
+from time import sleep
 
 # Importing the model
 model = YOLO("../runs/detect/train8/weights/last.pt")
@@ -26,7 +28,6 @@ while cap.isOpened():
     for data in results:
         if data:
             boxes = data.boxes.xyxy.tolist()
-            #data.show()
             
             for box in boxes:
                 # Extraindo coordenadas da bounding box
@@ -35,10 +36,19 @@ while cap.isOpened():
 
                 # Desenhando a bounding box na imagem
                 cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+
+                for code in decode(frame):
+                    #print(code.type)
+                    #print(code.data.decode('utf-8'))
+                    #print(type(code.data.decode('utf-8')))
+                    cv2.putText(frame, code.data.decode('utf-8'), (x1,y1),cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 250, 0), 2, cv2.LINE_AA)
                 
         else:
             pass
+
+    if cv2.waitKey(10) & 0xFF == ord('q'):
+            break
     cv2.imshow('Processando', frame)
 
 cap.release()
-cap.closeAlWindows()
+cv2.destroyAllWindows()
