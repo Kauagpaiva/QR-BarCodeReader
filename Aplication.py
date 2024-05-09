@@ -1,10 +1,6 @@
-from ultralytics import YOLO
 import cv2
 from pyzbar.pyzbar import decode #QR/Bar code reader
-from time import sleep
-
-# Importing the model
-model = YOLO("../runs/detect/train8/weights/last.pt")
+import numpy as np
 
 # Starting the camera
 cap = cv2.VideoCapture(0)
@@ -14,41 +10,26 @@ W = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 while cap.isOpened():
 
     # Gets the frames from the camera
-    ret, frame = cap.read()
+    sucess, frame = cap.read()
 
-    if not ret:
+    if not sucess:
         break
 
     if cv2.waitKey(10) & 0xFF == ord('q'):
             break
 
-    # gets the detections from the frame
-    results = model(frame)
+    for code in decode(frame):
+        points = np.array([code.polygon], np.int32)
+        points = points.reshape((-1,1,2))
+        cv2.polylines(frame,[points],True, (0,250,0),5)
 
-    for data in results:
-        if data:
-            boxes = data.boxes.xyxy.tolist()
-            
-            for box in boxes:
-                # Extraindo coordenadas da bounding box
-                x1, y1 = int(box[0]), int(box[1])
-                x2, y2 = int(box[2]), int(box[3])
-
-                # Desenhando a bounding box na imagem
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-
-                for code in decode(frame):
-                    #print(code.type)
-                    #print(code.data.decode('utf-8'))
-                    #print(type(code.data.decode('utf-8')))
-                    cv2.putText(frame, code.data.decode('utf-8'), (x1,y1),cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 250, 0), 2, cv2.LINE_AA)
-                
-        else:
-            pass
+        data = code.data.decode('utf-8')
+        points2 = code.rect
+        cv2.putText(frame, data,(points2[0], points2[1]),cv2.FONT_HERSHEY_COMPLEX, 1, (0,250,0), 2)
 
     if cv2.waitKey(10) & 0xFF == ord('q'):
             break
-    cv2.imshow('Processando', frame)
+    cv2.imshow('Processing', frame)
 
 cap.release()
 cv2.destroyAllWindows()
